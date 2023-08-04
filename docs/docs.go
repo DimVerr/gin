@@ -25,7 +25,35 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/creds": {
+        "/api/creds/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get all credentials.",
+                "summary": "Get all credentials.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/utils.Response"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "int"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/creds/new": {
             "post": {
                 "security": [
                     {
@@ -52,7 +80,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/utils.Credential"
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "400": {
@@ -70,35 +98,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/creds/all": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Get all credentials.",
-                "summary": "Get all credentials.",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/utils.Credential"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "int"
-                        }
-                    }
-                }
-            }
-        },
-        "/creds/{cred_id}": {
+        "/api/creds/{cred_id}": {
             "get": {
                 "security": [
                     {
@@ -120,7 +120,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Credential"
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "404": {
@@ -144,12 +144,19 @@ const docTemplate = `{
                 "summary": "Update Credentials.",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "cred_id",
+                        "name": "cred_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "update request",
                         "name": "creds",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/utils.UpdateRequest"
+                            "$ref": "#/definitions/utils.CredentialSwag"
                         }
                     }
                 ],
@@ -157,7 +164,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.Credential"
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "404": {
@@ -207,7 +214,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/login": {
+        "/api/login": {
             "post": {
                 "description": "Log in the app.",
                 "consumes": [
@@ -256,7 +263,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/signup": {
+        "/api/signup": {
             "post": {
                 "description": "Log in the app.",
                 "consumes": [
@@ -278,7 +285,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.User"
+                            "$ref": "#/definitions/utils.UserResponse"
                         }
                     },
                     "409": {
@@ -298,50 +305,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "gorm.DeletedAt": {
-            "type": "object",
-            "properties": {
-                "time": {
-                    "type": "string"
-                },
-                "valid": {
-                    "description": "Valid is true if Time is not NULL",
-                    "type": "boolean"
-                }
-            }
-        },
-        "utils.Credential": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "credName": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "domain": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "login": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "userID": {
-                    "type": "integer"
-                }
-            }
-        },
         "utils.CredentialSwag": {
             "type": "object",
             "properties": {
@@ -381,7 +344,7 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.UpdateRequest": {
+        "utils.Response": {
             "type": "object",
             "properties": {
                 "credName": {
@@ -401,21 +364,9 @@ const docTemplate = `{
                 }
             }
         },
-        "utils.User": {
+        "utils.UserResponse": {
             "type": "object",
             "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "credential": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/utils.Credential"
-                    }
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -423,9 +374,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                },
-                "updatedAt": {
                     "type": "string"
                 }
             }

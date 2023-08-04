@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"fiber/utils"
+	"gogin/config"
+	"gogin/models"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 )
@@ -12,42 +12,46 @@ import (
 // @Summary Signup.
 // @Description Log in the app.
 // @Accept json
-// @Param user body utils.LoginRequest true "signup"
-// @Success 200 {object} utils.User
+// @Param user body models.LoginRequest true "signup"
+// @Success 200 {object} models.UserResponse
 // @Failure 409 {int} uint
 // @Failure 422 {int} uint
-// @Router /signup [post]
+// @Router /api/signup [post]
 func SignUp(c *gin.Context) {
-	db := utils.ConnectToDB()
-    body := utils.User{}
+	db := config.ConnectToDB()
+    body := models.User{}
 
     if err := c.ShouldBindJSON(&body); err != nil {
-        c.AbortWithError(http.StatusUnprocessableEntity, err)
+        c.JSON(http.StatusUnprocessableEntity, "Name is already in use")
         return
     }
-	user := utils.User{Name: body.Name , Password: body.Password}
+	user := models.User{Name: body.Name , Password: body.Password}
 
     if result := db.Create(&user); result.Error != nil {
     	c.AbortWithError(http.StatusConflict, result.Error)
 		return
 	}
-	var response utils.UserResponse
+	var response models.UserResponse
 	copier.Copy(&response, &user)
     c.JSON(http.StatusCreated, &response)
 }
 
-// func SignUp(c *fiber.Ctx) error{
-// 	db := utils.ConnectToDB()
-// 	user := new(utils.User)
 
-// 	if err := c.BodyParser(&user); err != nil {
-// 		return c.Status(422).SendString(err.Error())
-// 	}
+func SignUpTest(c *gin.Context) {
+	db := config.ConnectToTestDB()
+    body := models.User{}
 
-// 	if result := db.Create(user); result.Error != nil {
-// 		return c.Status(409).SendString("User with this name is already existing")
-// 	}
-// 	var response utils.UserResponse
-// 	copier.Copy(&response, &user)
-// 	return c.Status(200).JSON(response)
-// }
+    if err := c.ShouldBindJSON(&body); err != nil {
+        c.JSON(http.StatusUnprocessableEntity, "Name is already in use")
+        return
+    }
+	user := models.User{Name: body.Name , Password: body.Password}
+
+    if result := db.Create(&user); result.Error != nil {
+    	c.AbortWithError(http.StatusConflict, result.Error)
+		return
+	}
+	var response models.UserResponse
+	copier.Copy(&response, &user)
+    c.JSON(http.StatusCreated, &response)
+}

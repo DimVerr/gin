@@ -1,14 +1,14 @@
 package main
 
 import (
-	_ "fiber/docs"
-	"fiber/handlers"
-	"fiber/utils"
+	"gogin/handlers"
+	"gogin/config"
 	"log"
-
-	// swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	_ "gogin/docs"
 )
 
 // @title Fiber Swagger Example API
@@ -29,25 +29,24 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
-
 func main() {
-	app := gin.Default()
+	app := gin.New()
+	app.Use(CORSMiddleware())
 
 	errEnv := godotenv.Load()
 	if errEnv != nil {
 	  panic("Failed to load .env file")
 	}
-	// secret := os.Getenv("SECRET")
-	// jwt := utils.NewAuthMiddleware(secret)
-	
-	utils.ConnectToDB()
-	// app.GET("/swagger/*", swagger.HandlerDefault) // default
+	config.ConnectToDB()
+	// url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
+
 	public := app.Group("/api")
 	public.POST("/login", handlers.Login)
 	public.POST("/signup", handlers.SignUp)
 
+	
 	protected:= app.Group("/api/creds")
-	protected.Use(utils.JwtAuthMiddleware())
+	protected.Use(config.JwtAuthMiddleware())
 	protected.GET("/all", handlers.GetAll)
 	protected.GET("/:cred_id", handlers.GetOne)	
 	protected.POST("/new", handlers.CreateCreds)
@@ -55,36 +54,27 @@ func main() {
 	protected.DELETE("/:cred_id", handlers.DeleteCreds)
 
 
+	app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	if err:= app.Run("127.0.0.1:8080"); err != nil {
+	if err:= app.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-// func main() {
-// 	app := fiber.New()
+func CORSMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
 
-// 	errEnv := godotenv.Load()
-// 	if errEnv != nil {
-// 	  panic("Failed to load .env file")
-// 	}
-// 	secret := os.Getenv("SECRET")
-// 	jwt := utils.NewAuthMiddleware(secret)
-	
-// 	utils.ConnectToDB()
-// 	app.Get("/swagger/*", swagger.HandlerDefault) // default
-// 	app.Post("/login", handlers.Login)
-// 	app.Post("/signup", handlers.SignUp)
-// 	app.Get("/creds/all", jwt, handlers.GetAll)
-// 	app.Get("/creds/:cred_id", jwt, handlers.GetOne)	
-// 	app.Post("/creds", jwt, handlers.CreateCreds)
-// 	app.Put("/creds/:cred_id", jwt, handlers.UpdateCreds)
-// 	app.Delete("/creds/:cred_id", jwt, handlers.DeleteCreds)
+        c.Header("Access-Control-Allow-Origin", "*")
+        c.Header("Access-Control-Allow-Credentials", "true")
+        c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+        c.Header("Access-Control-Allow-Methods", "POST,HEAD,PATCH, OPTIONS, GET, PUT")
 
+        if c.Request.Method == "OPTIONS" {
+            c.AbortWithStatus(204)
+            return
+        }
 
-
-// 	if err:= app.Listen(":8080"); err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
+        c.Next()
+    }
+}
 

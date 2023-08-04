@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      # enter own pass to project files
+      - .:/go/gogin
+    command: air ./main.go -b 0.0.0.0
+
+  db:
+    image: postgres:alpine
+    environment:
+      - DATABASE_HOST=${DB_HOST}
+      - DATABASE_PORT=${DB_PORT}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "1234:5432"
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+
+  db_test:
+    image: postgres:alpine
+    environment:
+      - DATABASE_HOST=${TEST_DB_HOST}
+      - DATABASE_PORT=${TEST_DB_PORT}
+      - POSTGRES_USER=${TEST_DB_USER}
+      - POSTGRES_PASSWORD=${TEST_DB_PASSWORD}
+      - POSTGRES_DB=${TEST_DB_NAME}
+    ports:
+      - "4568:5432"
+    volumes:
+      - postgres-db_test:/var/lib/postgresql/data
+
+volumes:
+  postgres-db:
+  postgres-db_test:

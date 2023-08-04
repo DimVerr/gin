@@ -1,34 +1,5 @@
 basePath: /
 definitions:
-  gorm.DeletedAt:
-    properties:
-      time:
-        type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
-    type: object
-  utils.Credential:
-    properties:
-      createdAt:
-        type: string
-      credName:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      domain:
-        type: string
-      id:
-        type: integer
-      login:
-        type: string
-      password:
-        type: string
-      updatedAt:
-        type: string
-      userID:
-        type: integer
-    type: object
   utils.CredentialSwag:
     properties:
       credName:
@@ -54,7 +25,7 @@ definitions:
       user_id:
         type: integer
     type: object
-  utils.UpdateRequest:
+  utils.Response:
     properties:
       credName:
         type: string
@@ -67,23 +38,13 @@ definitions:
       password:
         type: string
     type: object
-  utils.User:
+  utils.UserResponse:
     properties:
-      createdAt:
-        type: string
-      credential:
-        items:
-          $ref: '#/definitions/utils.Credential'
-        type: array
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: integer
       name:
         type: string
       password:
-        type: string
-      updatedAt:
         type: string
     type: object
 host: 127.0.0.1:8080
@@ -100,35 +61,7 @@ info:
   title: Fiber Swagger Example API
   version: "2.0"
 paths:
-  /creds:
-    post:
-      consumes:
-      - application/json
-      description: Create credentials of user.
-      parameters:
-      - description: creds
-        in: body
-        name: cred
-        required: true
-        schema:
-          $ref: '#/definitions/utils.CredentialSwag'
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/utils.Credential'
-        "400":
-          description: Bad Request
-          schema:
-            type: int
-        "422":
-          description: Unprocessable Entity
-          schema:
-            type: int
-      security:
-      - ApiKeyAuth: []
-      summary: Create credentials.
-  /creds/{cred_id}:
+  /api/creds/{cred_id}:
     delete:
       description: Delete credentials by id.
       parameters:
@@ -161,7 +94,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Credential'
+            $ref: '#/definitions/utils.Response'
         "404":
           description: Not Found
           schema:
@@ -174,17 +107,22 @@ paths:
       - application/json
       description: Update Credentials of your user.
       parameters:
+      - description: cred_id
+        in: path
+        name: cred_id
+        required: true
+        type: integer
       - description: update request
         in: body
         name: creds
         required: true
         schema:
-          $ref: '#/definitions/utils.UpdateRequest'
+          $ref: '#/definitions/utils.CredentialSwag'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.Credential'
+            $ref: '#/definitions/utils.Response'
         "404":
           description: Not Found
           schema:
@@ -196,7 +134,7 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update Credentials.
-  /creds/all:
+  /api/creds/all:
     get:
       description: Get all credentials.
       responses:
@@ -204,7 +142,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/utils.Credential'
+              $ref: '#/definitions/utils.Response'
             type: array
         "404":
           description: Not Found
@@ -213,7 +151,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get all credentials.
-  /login:
+  /api/creds/new:
+    post:
+      consumes:
+      - application/json
+      description: Create credentials of user.
+      parameters:
+      - description: creds
+        in: body
+        name: cred
+        required: true
+        schema:
+          $ref: '#/definitions/utils.CredentialSwag'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            type: int
+        "422":
+          description: Unprocessable Entity
+          schema:
+            type: int
+      security:
+      - ApiKeyAuth: []
+      summary: Create credentials.
+  /api/login:
     post:
       consumes:
       - application/json
@@ -245,7 +211,7 @@ paths:
           schema:
             type: int
       summary: Log in.
-  /signup:
+  /api/signup:
     post:
       consumes:
       - application/json
@@ -261,7 +227,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/utils.User'
+            $ref: '#/definitions/utils.UserResponse'
         "409":
           description: Conflict
           schema:

@@ -3,9 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fiber/handlers"
-	"fiber/utils"
-
+	"gogin/handlers"
+	"gogin/config"
+	"gogin/models"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -19,37 +19,37 @@ func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 	setup()
 	exitCode := m.Run()
-	// teardown()
+	teardown()
 
 	os.Exit(exitCode)
 }
 func setup() {
-	db := utils.ConnectToDB()
-	db.AutoMigrate(&utils.User{}, utils.Credential{})
+	db := config.ConnectToTestDB()
+	db.AutoMigrate(&models.User{}, models.Credential{})
 	
 }
 
-// func teardown() {
-// 	db := utils.ConnectToDB()
-// 	migrator := db.Migrator()
-// 	migrator.DropTable(&utils.User{})
-// 	migrator.DropTable(&utils.Credential{})
-// }
+func teardown() {
+	db := config.ConnectToTestDB()
+	migrator := db.Migrator()
+	migrator.DropTable(&models.User{})
+	migrator.DropTable(&models.Credential{})
+}
 
 func router() *gin.Engine{
 	app := gin.Default()
 
 	public := app.Group("/api")
-	public.POST("/login", handlers.Login)
-	public.POST("/signup", handlers.SignUp)
+	public.POST("/login", handlers.LoginTest)
+	public.POST("/signup", handlers.SignUpTest)
 
 	protected:= app.Group("/api/creds")
-	protected.Use(utils.JwtAuthMiddleware())
-	protected.GET("/all", handlers.GetAll)
-	protected.GET("/:cred_id", handlers.GetOne)	
-	protected.POST("/new", handlers.CreateCreds)
-	protected.PUT("/:cred_id", handlers.UpdateCreds)
-	protected.DELETE("/:cred_id", handlers.DeleteCreds)
+	protected.Use(config.JwtAuthMiddleware())
+	protected.GET("/all", handlers.GetAllTest)
+	protected.GET("/:cred_id", handlers.GetOneTest)	
+	protected.POST("/new", handlers.CreateCredsTest)
+	protected.PUT("/:cred_id", handlers.UpdateCredsTest)
+	protected.DELETE("/:cred_id", handlers.DeleteCredsTest)
 
 	return app
 }
@@ -66,33 +66,33 @@ func makeRequest(method, url string, body interface{}, isAuthenticatedRequest bo
 }
 
 func bearerToken() string {
-	user := utils.LoginRequest{
+	user := models.LoginRequest{
 			Name: "yemiwebby",
 			Password: "test",
 	}
 
 	writer := makeRequest("POST", "/api/login", user, false)
-	var response utils.LoginResponse
+	var response models.LoginResponse
 	json.Unmarshal(writer.Body.Bytes(), &response)
 	return response.Token
 
 }
 
 func TestRegister(t *testing.T) {
-	newUser := utils.LoginRequest{
+	newUser := models.LoginRequest{
 			Name: "yemiwebby",
 			Password: "test",
 	}
 	writer := makeRequest("POST", "/api/signup", newUser, false)
 	assert.Equal(t, http.StatusCreated, writer.Code)
-	var response utils.UserResponse
+	var response models.UserResponse
 	json.Unmarshal(writer.Body.Bytes(), &response)
 
-	assert.Equal(t, utils.UserResponse{ID: response.ID, Name: response.Name, Password: response.Password}, response)
+	assert.Equal(t, models.UserResponse{ID: response.ID, Name: response.Name, Password: response.Password}, response)
 }
 
 func TestLogin(t *testing.T) {
-	user := utils.LoginRequest{
+	user := models.LoginRequest{
 			Name: "yemiwebby",
 			Password: "test",
 	}
@@ -101,14 +101,14 @@ func TestLogin(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, writer.Code)
 
-	var response utils.LoginResponse
+	var response models.LoginResponse
 	json.Unmarshal(writer.Body.Bytes(), &response)
 
-	assert.Equal(t, utils.LoginResponse{Token: response.Token, ID: response.ID}, response)
+	assert.Equal(t, models.LoginResponse{Token: response.Token, ID: response.ID}, response)
 }
 
 func TestAddEntry(t *testing.T) {
-	newEntry := utils.Credential{
+	newEntry := models.Credential{
 			CredName: "test",
 			Domain: "test",
 			Login: "test",
@@ -124,26 +124,27 @@ func TestGetAllEntries(t *testing.T) {
 }
 
 func TestGetOneEntry(t *testing.T) {
-	writer := makeRequest("GET", "/api/creds/7", nil, true)
+	writer := makeRequest("GET", "/api/creds/1", nil, true)
 	assert.Equal(t, http.StatusOK, writer.Code)
 }
+
 func TestUpdateEntry(t *testing.T) {
-	newEntry := utils.Credential{
+	newEntry := models.Credential{
 		CredName: "update",
 		Domain: "update",
 		Login: "update",
 		Password: "update",
 	}
 
-	writer := makeRequest("PUT", "/api/creds/7", newEntry, true)
+	writer := makeRequest("PUT", "/api/creds/1", newEntry, true)
 	assert.Equal(t, http.StatusOK, writer.Code)
-	var response utils.Response
+	var response models.Response
 	json.Unmarshal(writer.Body.Bytes(), &response)
-	assert.Equal(t, utils.Response{ID: response.ID, CredName: response.CredName, Domain: response.CredName,Login: response.Login, Password: response.Password}, response)
+	assert.Equal(t, models.Response{ID: response.ID, CredName: response.CredName, Domain: response.CredName,Login: response.Login, Password: response.Password}, response)
 
 }
 
 func TestDelete(t *testing.T) {
-	writer := makeRequest("DELETE", "/api/creds/7", nil, true)
+	writer := makeRequest("DELETE", "/api/creds/1", nil, true)
 	assert.Equal(t, http.StatusOK, writer.Code)
 }
