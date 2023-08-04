@@ -28,7 +28,7 @@ func Login(c *gin.Context) {
     }
 	user := models.User{Name: body.Name , Password: body.Password}
 
-	token, err, user_id := config.LoginCheck(user.Name, user.Password)
+	token,user_id,err := config.LoginCheck(user.Name, user.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "username or password is incorrect."})
 		return

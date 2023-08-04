@@ -66,7 +66,7 @@ func ConnectToTestDB() *gorm.DB{
 	return db
 }
 
-func LoginCheck(name string, password string) (string,error,uint) {
+func LoginCheck(name string, password string) (string,uint,error) {
 	db := ConnectToDB()
 	var err error
 
@@ -75,22 +75,22 @@ func LoginCheck(name string, password string) (string,error,uint) {
 	err = db.Model(models.User{}).Where("name = ?", name).Take(&u).Error
 
 	if err != nil {
-		return "", err, 0
+		return "", 0, err
 	}
 
 	err = VerifyPassword(password, u.Password)
 
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		return "", err, 0
+		return "", 0, err
 	}
 
 	token,err := token.GenerateToken(u.ID)
 
 	if err != nil {
-		return "",err, 0
+		return "", 0 ,err
 	}
 
-	return token,nil, u.ID
+	return token, u.ID ,nil
 	
 }
 
