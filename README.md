@@ -24,3 +24,5 @@ docker compose build
 docker compose up
 ```
 ### Congatulations! Project is ready for use 
+### You can use API collection from repository
+### Default URL is http://localhost:8080
