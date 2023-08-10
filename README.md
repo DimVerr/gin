@@ -25,5 +25,5 @@ docker compose up
 ```
 You can use API collection from repository(default URL is http://localhost:8080)
 
-### Congatulations! Project is ready for use 
+### Congatulations! App is ready for use 
 
