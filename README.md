@@ -23,4 +23,10 @@ docker compose build
 ```golang
 docker compose up
 ```
-### Congatulations! Project is ready for use 
+You can use API collection from repository(default URL is http://localhost:8080)
+
+## Swagger
+http://localhost:8080/swagger/index.html 
+
+### Congatulations! App is ready for use 
+
